@@ -31,7 +31,7 @@ import static android.os.Environment.getExternalStorageDirectory;
  * 参考: http://blog.csdn.net/qq_26787115/article/details/53078951
  */
 
-public class MainActivity2 extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity3 extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "MainActivity2";
     private AtomicBoolean isRecording = new AtomicBoolean(false);
@@ -74,9 +74,9 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     public void startRecord() {
         Log.i(TAG, "开始录音");
         //16K采集率
-        int frequency = 16000;
+        int frequency = 44100;
         //格式
-        int channelConfiguration = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+        int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
         //16Bit
         int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
         //生成PCM文件
@@ -95,28 +95,20 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         }
         try {
             //输出流
-//            FileOutputStream fos = new FileOutputStream(file);
-            OutputStream os = new FileOutputStream(file);
-            BufferedOutputStream bos = new BufferedOutputStream(os);
-            DataOutputStream dos = new DataOutputStream(bos);
+            FileOutputStream fos = new FileOutputStream(file);
             int bufferSize = AudioRecord.getMinBufferSize(frequency, channelConfiguration, audioEncoding);
             AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, frequency, channelConfiguration, audioEncoding, bufferSize);
-
-            short[] buffer = new short[bufferSize];
-            byte[] bs = new byte[bufferSize];
+            bufferSize = bufferSize *2;
+            byte[] buffer = new byte[bufferSize];
             audioRecord.startRecording();
             Log.i(TAG, "开始录音");
             isRecording.set(true);
             while (isRecording.get()) {
                 int bufferReadResult = audioRecord.read(buffer, 0, bufferSize);
-//                fos.write(bs, 0, bufferReadResult);
-                for (int i = 0; i < bufferReadResult; i++) {
-                    dos.writeShort(buffer[i]);
-                }
+                fos.write(buffer, 0, bufferReadResult);
             }
             audioRecord.stop();
-            dos.close();
-//            fos.close();
+            fos.close();
         } catch (Throwable t) {
             Log.e(TAG, "录音失败");
         }
