@@ -41,10 +41,10 @@ Log.i(TAG, "开始录音");
 isRecording.set(true);
 while (isRecording.get()) {
     int bufferReadResult = audioRecord.read(buffer, 0, bufferSize);
-        for (int i = 0; i < bufferReadResult; i++) {
-             dos.writeShort(buffer[i]);
-        }
+    for (int i = 0; i < bufferReadResult; i++) {
+         dos.writeShort(buffer[i]);
     }
-    audioRecord.stop();
-    dos.close();
+}
+audioRecord.stop();
+dos.close();
 ```
