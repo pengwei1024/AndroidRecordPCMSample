@@ -35,6 +35,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
 
     private static final String TAG = "MainActivity2";
     private AtomicBoolean isRecording = new AtomicBoolean(false);
+    private AudioTrack audioTrack;
 //    private File file = new File(getExternalStorageDirectory().getAbsolutePath() + "/baiduHi/reverseme.pcm");
     private File file = new File(getExternalStorageDirectory().getAbsolutePath() + "/BaiduHi/audio/temp1.hd.pcm");
 
@@ -122,10 +123,25 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         }
     }
 
+    // 记录上一次点击时间
+    private long lastClickTime = 0;
+
+
     //播放文件
     public void PlayRecord() {
+        if (System.currentTimeMillis() - lastClickTime <= 1000) {
+            Log.d(TAG, "click fast");
+            lastClickTime = System.currentTimeMillis();
+            return;
+        }
+        lastClickTime = System.currentTimeMillis();
         if(file == null){
             return;
+        }
+        if (audioTrack != null && audioTrack.getPlayState()
+                == AudioTrack.PLAYSTATE_PLAYING) {
+            audioTrack.stop();
+            audioTrack.release();
         }
         //读取文件
         int musicLength = (int) (file.length() / 2);
@@ -140,14 +156,24 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 i++;
             }
             dis.close();
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+            audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                     16000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
                     AudioFormat.ENCODING_PCM_16BIT,
-                    musicLength * 2,
-                    AudioTrack.MODE_STREAM);
+                    musicLength, AudioTrack.MODE_STREAM);
+            audioTrack.setNotificationMarkerPosition(musicLength);
+            audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+                @Override
+                public void onMarkerReached(AudioTrack audioTrack) {
+                    Log.i(TAG, "播放完成");
+                }
+
+                @Override
+                public void onPeriodicNotification(AudioTrack audioTrack) {
+
+                }
+            });
             audioTrack.play();
             audioTrack.write(music, 0, musicLength);
-            audioTrack.stop();
         } catch (Throwable t) {
             Log.e(TAG, "播放失败");
         }
